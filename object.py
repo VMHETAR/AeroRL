@@ -46,3 +46,26 @@ class Drone:
         
         self.battery -= 1
 
+class DroneEnv:
+    def __init__(self, n_drones=3):
+        self.drones = [Drone(i) for i in range(n_drones)]
+        self.target = np.array([10, 10])
+
+    def get_obs(self):
+        return np.concatenate([d.state for d in self.drones])
+
+    def step(self, actions):
+        rewards = []
+
+        for drone, action in zip(self.drones, actions):
+            drone.step(action)
+
+            pos = np.array([drone.x, drone.y])
+            dist = np.linalg.norm(pos - self.target)
+
+            reward = -dist
+            rewards.append(reward)
+
+        done = all(not d.alive for d in self.drones)
+
+        return self.get_obs(), rewards, done
